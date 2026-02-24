@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 from datetime import datetime
 from shared.client import MemoryClient
 from shared.utils import LLM_Judge
@@ -7,32 +8,38 @@ from concurrent.futures import ThreadPoolExecutor
 
 class LoCoMoEvaluator:
     def __init__(self, endpoint_url: str, num_clients: int = 10):
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        self.logger = logging.getLogger(__name__)
         self.endpoint_url = endpoint_url
         self.max_workers = num_clients
-        # Create a pool of judges sharing clients
-        self.judge_clients = [MemoryClient(endpoint_url) for _ in range(num_clients)]
-        self.judges = [LLM_Judge(client.ask_ai) for client in self.judge_clients]
         self.results = []
 
     def run(self, dataset_path: str = None):
         if dataset_path is None:
             dataset_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "data", "locomo10.json"
+                os.path.dirname(__file__), "data", "locomo10.json"
             )
 
         with open(dataset_path, "r") as f:
             dataset = json.load(f)
 
-        def evaluate_sample(sample, judge):
+        def evaluate_sample(sample):
             client = MemoryClient(self.endpoint_url)
-            # judge is passed in
+            judge_client = MemoryClient(self.endpoint_url)
+            judge = LLM_Judge(judge_client.ask_ai)
             sample_id = sample["sample_id"]
-            print(f"\n--- Evaluating Sample: {sample_id} ---")
+            self.logger.info(f"Evaluating Sample: {sample_id}")
+
             # 1. SETUP: Unique agent name
             agent_id = f"Agent_{sample_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
             client.create_agent(
                 agent_id=agent_id, pattern="support", description="LoCoMo eval agent"
             )
+
             # 2. INGESTION
             conv_data = sample["conversation"]
             session_keys = sorted(
@@ -58,8 +65,9 @@ class LoCoMoEvaluator:
                         },
                     )
                 client.end_session(agent_id=agent_id)
+
             # 3. EVALUATION (Filtering Category 5)
-            print(f"\n--- Testing Sample: {sample_id} ---")
+            self.logger.info(f"Testing Sample: {sample_id}")
             client.start_session(agent_id)
 
             def evaluate_qa(qa):
@@ -82,7 +90,7 @@ class LoCoMoEvaluator:
                         "score": score_data.get("score", 0),
                     }
                 except Exception as e:
-                    print(f"Error processing QA for sample {sample_id}: {e}")
+                    self.logger.error(f"Error processing QA for sample {sample_id}: {e}")
                     return None
 
             for qa in sample["qa"]:
@@ -90,22 +98,21 @@ class LoCoMoEvaluator:
                 if result:
                     self.results.append(result)
 
-            client.end_session(agent_id=agent_id)
             # 4. CLEANUP
+            client.end_session(agent_id=agent_id)
             client.delete_agent(agent_id)
 
         # Use ThreadPoolExecutor to respect max_workers (num_clients)
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = []
             for idx, sample in enumerate(dataset):
-                judge = self.judges[idx % len(self.judges)]
-                futures.append(executor.submit(evaluate_sample, sample, judge))
+                futures.append(executor.submit(evaluate_sample, sample))
             
             for future in futures:
                 try:
                     future.result()
                 except Exception as e:
-                    print(f"Error evaluating sample: {e}")
+                    self.logger.error(f"Error evaluating sample: {e}")
 
         self.save_results()
 
@@ -119,4 +126,4 @@ class LoCoMoEvaluator:
         )
         with open(filename, "w") as f:
             json.dump(self.results, f, indent=4)
-        print(f"\nResults saved to {filename}")
+        self.logger.info(f"Results saved to {filename}")
