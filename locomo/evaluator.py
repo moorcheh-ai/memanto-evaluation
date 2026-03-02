@@ -1,13 +1,19 @@
 import json
 import os
+import sys
 import logging
+import threading
 from datetime import datetime
-from shared.client import MemoryClient
-from shared.utils import LLM_Judge
 from concurrent.futures import ThreadPoolExecutor
 
+# Add parent directory to path to import src
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from shared.client import MemoryClient
+from shared.utils import LLM_Judge
+
 class LoCoMoEvaluator:
-    def __init__(self, endpoint_url: str, num_clients: int = 10):
+    def __init__(self, endpoint_url: str, num_clients: int = 3):
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -17,58 +23,45 @@ class LoCoMoEvaluator:
         self.endpoint_url = endpoint_url
         self.max_workers = num_clients
         self.results = []
+        
+        # Initialize results file path once
+        results_dir = os.path.join(
+            os.path.dirname(__file__), "results"
+        )
+        os.makedirs(results_dir, exist_ok=True)
+        self.results_file = os.path.join(
+            results_dir, f"locomo_results_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+        )
+        self.lock = threading.Lock()
 
-    def run(self, dataset_path: str = None):
+    def run(self, dataset_path: str = None, limit: int = None):
         if dataset_path is None:
             dataset_path = os.path.join(
                 os.path.dirname(__file__), "data", "locomo10.json"
             )
 
-        with open(dataset_path, "r") as f:
+        with open(dataset_path, "r", encoding="utf-8") as f:
             dataset = json.load(f)
+
+        if limit:
+            dataset = dataset[:limit]
+            self.logger.info(f"Limiting to first {limit} samples.")
 
         def evaluate_sample(sample):
             client = MemoryClient(self.endpoint_url)
             judge_client = MemoryClient(self.endpoint_url)
-            judge = LLM_Judge(judge_client.ask_ai)
+            judge = LLM_Judge(judge_client.ask_ai, dataset_name="LoCoMo")
             sample_id = sample["sample_id"]
-            self.logger.info(f"Evaluating Sample: {sample_id}")
-
-            # 1. SETUP: Unique agent name
-            agent_id = f"Agent_{sample_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            client.create_agent(
-                agent_id=agent_id, pattern="support", description="LoCoMo eval agent"
-            )
-
-            # 2. INGESTION
-            conv_data = sample["conversation"]
-            session_keys = sorted(
-                [
-                    k
-                    for k in conv_data.keys()
-                    if k.startswith("session_") and not k.endswith("date_time")
-                ],
-                key=lambda x: int(x.split("_")[1]),
-            )
-            for s_key in session_keys:
-                timestamp = conv_data.get(f"{s_key}_date_time", "Unknown")
-                client.start_session(agent_id)
-                for turn in conv_data[s_key]:
-                    content = f"[{timestamp}] {turn['speaker']}: {turn['text']}"
-                    client.store_memory(
-                        agent_id=agent_id,
-                        content=content,
-                        metadata={
-                            "dia_id": turn.get("dia_id", ""),
-                            "session": s_key,
-                            "timestamp": timestamp,
-                        },
-                    )
-                client.end_session(agent_id=agent_id)
+            
+            # 1. SETUP: Deterministic agent name (must match Ingestor)
+            agent_id = f"locomo_eval_{sample_id}"
+            self.logger.info(f"Evaluating Sample: {sample_id} with Agent: {agent_id}")
 
             # 3. EVALUATION (Filtering Category 5)
-            self.logger.info(f"Testing Sample: {sample_id}")
-            client.start_session(agent_id)
+            try:
+                client.start_session(agent_id)
+            except Exception as e:
+                self.logger.warning(f"Could not start session for agent {agent_id}: {e}")
 
             def evaluate_qa(qa):
                 try:
@@ -77,7 +70,7 @@ class LoCoMoEvaluator:
                         return None
                     question = qa["question"]
                     ground_truth = qa["answer"]
-                    predicted_answer = client.answer(agent_id, question)
+                    predicted_answer = client.answer(dataset_name="LoCoMo", agent_id=agent_id, question=question, threshold=0.1, limit=40)
                     score_data = judge.evaluate(
                         question, predicted_answer, ground_truth
                     )
@@ -96,34 +89,33 @@ class LoCoMoEvaluator:
             for qa in sample["qa"]:
                 result = evaluate_qa(qa)
                 if result:
-                    self.results.append(result)
+                    with self.lock:
+                        self.results.append(result)
+                        if len(self.results) % 10 == 0:
+                            self.save_results()
 
             # 4. CLEANUP
             client.end_session(agent_id=agent_id)
-            client.delete_agent(agent_id)
 
-        # Use ThreadPoolExecutor to respect max_workers (num_clients)
+        # Use ThreadPoolExecutor to parallelize
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = []
-            for idx, sample in enumerate(dataset):
-                futures.append(executor.submit(evaluate_sample, sample))
+            futures = [executor.submit(evaluate_sample, sample) for sample in dataset]
             
-            for future in futures:
+            for i, future in enumerate(futures):
                 try:
                     future.result()
+                    self.logger.info(f"Finished processing sample {i + 1}/{len(dataset)}")
                 except Exception as e:
-                    self.logger.error(f"Error evaluating sample: {e}")
-
-        self.save_results()
+                    self.logger.error(f"Future failed: {e}")
+        
+        with self.lock:
+             self.save_results()
 
     def save_results(self):
-        results_dir = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "results"
-        )
-        os.makedirs(results_dir, exist_ok=True)
-        filename = os.path.join(
-            results_dir, f"locomo_results_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
-        )
-        with open(filename, "w") as f:
+        with open(self.results_file, "w") as f:
             json.dump(self.results, f, indent=4)
-        self.logger.info(f"Results saved to {filename}")
+        self.logger.info(f"Results saved to {self.results_file}")
+
+if __name__ == "__main__":
+    evaluator = LoCoMoEvaluator("http://127.0.0.1:8000")
+    evaluator.run()
