@@ -18,7 +18,7 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 
 | Method | Single-Hop | Multi-Hop | Open Domain | Temporal | Overall |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Mumla | 68.4% | 69.8% | 86.7% | 79.8% | 80.8% |
+| Mumla | 68.4% | 66.7% | 89.3% | 83.8% | 82.9% |
 
 ### Running Benchmarks
 

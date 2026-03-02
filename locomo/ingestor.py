@@ -74,7 +74,16 @@ class LoCoMoIngestor:
                     
                     try:
                         for turn in conv_data[s_key]:
-                            content = f"[{timestamp}] {turn['speaker']}: {turn['text']}"
+                            text = turn['text']
+                            if "blip_caption" in turn and turn["blip_caption"]:
+                                caption = turn["blip_caption"]
+                                query = turn.get("query", "")
+                                if query:
+                                    text += f" [Image: {caption} (Query: {query})]"
+                                else:
+                                    text += f" [Image: {caption}]"
+                            
+                            content = f"[{timestamp}] {turn['speaker']}: {text}"
                             dia_id = turn.get("dia_id", "")
                             
                             memories_to_store.append({
