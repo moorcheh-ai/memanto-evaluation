@@ -1,1 +1,1 @@
-longmem_eval/data/longmemeval_s_cleaned.json filter=lfs diff=lfs merge=lfs -text
+longmem/data/longmemeval_s_cleaned.json filter=lfs diff=lfs merge=lfs -text
