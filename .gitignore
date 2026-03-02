@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+venv/
+.venv/
+
+# Results - Ignore individual run results but keep baselines
+results/*.json
+results/**/*.json
+!results/baselines/*.json
+!results/baselines/**/*.json
+
+# Logs
+*.log
