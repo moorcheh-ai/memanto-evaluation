@@ -9,10 +9,10 @@ venv/
 .venv/
 
 # Results - Ignore individual run results but keep baselines
-results/*.json
-results/**/*.json
-!results/baselines/*.json
-!results/baselines/**/*.json
+**/results/*.json
+**/results/**/*.json
+!**/results/baselines/*.json
+!**/results/baselines/**/*.json
 
 # Logs
 *.log
