@@ -84,7 +84,7 @@ class LongMemEvaluator:
                 try:
                     judge_client = MemoryClient(self.endpoint_url)
                     judge = LLM_Judge(judge_client.ask_ai, dataset_name="LongMem")
-                    score_data = judge.evaluate(question, predicted_answer, ground_truth)
+                    score_data = judge.evaluate(question, predicted_answer, ground_truth, category=question_type)
                 except Exception as e:
                     self.logger.error(f"Error judging answer for {agent_id}: {e}")
                     score_data = {"score": 0, "reasoning": "Evaluation failed"}

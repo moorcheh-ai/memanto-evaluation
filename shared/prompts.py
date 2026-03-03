@@ -154,7 +154,8 @@ Provide your evaluation as a valid JSON object with the following fields:
     "reasoning": "One sentence explanation",
     "score": 1 or 0
 }}
-Ensure the response is a valid JSON object. Do not wrap it in markdown code blocks."""
+Ensure the response is a valid JSON object. Do not wrap it in markdown code blocks.
+"""
 
 def get_judge_prompt_locomo(question, correct_answer, predicted_answer):
     return f"""Your task is to label an answer to a question as 'CORRECT' or 'WRONG'. You will be given the following data:
@@ -185,3 +186,19 @@ def get_judge_prompt_locomo(question, correct_answer, predicted_answer):
     }}
     Ensure the response is a valid JSON object. Do not wrap it in markdown code blocks.
 """
+
+def get_summarize_session_prompt(chunks):
+    return f"""You are analyzing a document. Below are all chunks from this document.
+
+    Provide a comprehensive summary that:
+    1. Captures the main topic and purpose of the document
+    2. Highlights key points, findings, or conclusions
+    3. Notes the document structure and organization
+    4. Identifies any important details or data
+
+    Document chunks:
+
+    {chunks}
+
+    Write ONLY the summary text (maximum 1600 characters). Do not include any meta-information, character counts, or explanations about the summary itself. Just provide the actual summary content.
+    """

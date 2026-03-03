@@ -11,13 +11,13 @@ class LLM_Judge:
         self.ask_ai = ask_ai_func
         self.dataset_name = dataset_name
 
-    def evaluate(self, question, prediction, ground_truth):
+    def evaluate(self, question, prediction, ground_truth, category):
         try:
             # Generate the appropriate prompt based on the dataset
             if self.dataset_name.lower() == "locomo":
                 prompt = get_judge_prompt_locomo(question, ground_truth, prediction)
             else:
-                prompt = get_judge_prompt_long_mem(question, ground_truth, prediction)
+                prompt = get_judge_prompt_long_mem(question, ground_truth, prediction, category)
             # Call your implemented ask_ai function
             response_str = self.ask_ai(prompt)
 
