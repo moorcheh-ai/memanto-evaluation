@@ -12,7 +12,7 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 
 | Method | Single-session User | Single-session Assistant | Single-session Preference | Knowledge Update | Temporal Reasoning | Multi-session | Overall |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Mumla | 88.6% | 100.0% | 93.3% | 91.0% | 68.4% | 66.2% | 79.2% |
+| Mumla | 94.3% | 100.0% | 93.3% | 94.9% | 79.7% | 71.4% | 85.0% |
 
 #### LoCoMo
 
