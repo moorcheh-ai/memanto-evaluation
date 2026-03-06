@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 from concurrent.futures import ThreadPoolExecutor
-import time
 
 # Add parent directory to path to import src
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.client import MemoryClient
 
 class LongMemIngestor:
-    def __init__(self, endpoint_url: str, num_clients: int = 5):
+    def __init__(self, endpoint_url: str, num_clients: int = 3):
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -44,7 +43,7 @@ class LongMemIngestor:
             client = MemoryClient(self.endpoint_url)
             sample_id = sample.get("question_id", "unknown")
             # Ensure agent_id is safe for URLs
-            agent_id = f"longmem_eval_{sample_id}".replace(" ", "_")
+            agent_id = f"longmem_benchmark_{sample_id}".replace(" ", "_")
             
             try:
                 # 1. Create Agent
@@ -72,8 +71,7 @@ class LongMemIngestor:
                         speaker = turn.get("role", "user")
                         text = turn.get("content", "")
                         content = f"[{timestamp}] {speaker}: {text}"
-                        
-                        # Re-enable truncation, but with a larger limit (e.g., 9000 chars to be safe)
+
                         if len(content) > 9000:
                             content = content[:9000] + "... (truncated)"
                         
@@ -82,7 +80,7 @@ class LongMemIngestor:
                             title = title[:100]
 
                         # Ensure tags are strings
-                        tags_list = [str(t) for t in [sample_id, session_id_val, "longmem_eval"]]
+                        tags_list = [str(t) for t in [sample_id, session_id_val, "longmem_benchmark"]]
 
                         memories_to_store.append({
                             "content": content,
@@ -92,7 +90,6 @@ class LongMemIngestor:
                         })
 
                 if memories_to_store:
-                     # Start session before storing?
                     try:
                         client.start_session(agent_id)
                     except Exception as e:

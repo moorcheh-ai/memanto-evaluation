@@ -12,7 +12,7 @@ from shared.client import MemoryClient
 from shared.utils import LLM_Judge
 
 class LongMemEvaluator:
-    def __init__(self, endpoint_url: str, num_clients: int = 2):
+    def __init__(self, endpoint_url: str, num_clients: int = 10):
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -60,27 +60,27 @@ class LongMemEvaluator:
             client = MemoryClient(self.endpoint_url)
             sample_id = sample.get("question_id", "unknown")
             # Ensure agent_id is safe for URLs
-            agent_id = f"longmem_eval_{sample_id}".replace(" ", "_")
+            agent_id = f"longmem_benchmark_{sample_id}".replace(" ", "_")
             
             try:
                 # Start a session before answering
                 client.start_session(agent_id)
                 
-                # 3. Evaluate
+                # 1. Evaluate
                 question = sample.get("question", "")
                 ground_truth = sample.get("answer", "")
                 question_date = sample.get("question_date", "")
                 question_type = sample.get("question_type", "unknown")
                 full_question = f"[{question_date}] {question}"
                 
-                # 3. Answer using Agent API (Server-side RAG)
+                # 2. Answer using Agent API (Server-side RAG)
                 try:
-                    predicted_answer = client.answer(dataset_name="LongMem", agent_id=agent_id, question=full_question, threshold=0.1, limit=40)
+                    predicted_answer = client.answer_rag(dataset_name="LongMem", agent_id=agent_id, question=full_question, threshold=0.05, limit=100)
                 except Exception as e:
                     self.logger.error(f"Error asking AI for {agent_id}: {e}")
                     predicted_answer = "Error generating answer"
 
-                # Judge
+                # 3. Judge
                 try:
                     judge_client = MemoryClient(self.endpoint_url)
                     judge = LLM_Judge(judge_client.ask_ai, dataset_name="LongMem")
@@ -112,7 +112,6 @@ class LongMemEvaluator:
                     "ground_truth": sample.get("answer", ""),
                     "prediction": "Error"
                 }
-
 
         self.logger.info(f"Starting isolated evaluation of {len(dataset)} samples with {self.max_workers} threads...")
         

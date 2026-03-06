@@ -13,7 +13,7 @@ from shared.client import MemoryClient
 from shared.utils import LLM_Judge
 
 class LoCoMoEvaluator:
-    def __init__(self, endpoint_url: str, num_clients: int = 3):
+    def __init__(self, endpoint_url: str, num_clients: int = 10):
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -70,9 +70,9 @@ class LoCoMoEvaluator:
                         return None
                     question = qa["question"]
                     ground_truth = qa["answer"]
-                    predicted_answer = client.answer(dataset_name="LoCoMo", agent_id=agent_id, question=question, threshold=0.1, limit=40)
+                    predicted_answer = client.answer_rag(dataset_name="LoCoMo", agent_id=agent_id, question=question, threshold=0.05, limit=100)
                     score_data = judge.evaluate(
-                        question, predicted_answer, ground_truth
+                        question, predicted_answer, ground_truth, category
                     )
                     return {
                         "sample_id": sample_id,
