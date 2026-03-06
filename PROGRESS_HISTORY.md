@@ -72,7 +72,8 @@ Observing the individual questions and how the LLM fails to answer them, we noti
 #### LoCoMo
 **Overall Accuracy**: 86.3%
 
-Looking at the answering improvements, we can see that semantic search engines can be fooled by chunks that contain multiple topics. A chunk might be 90% irrelevant but contain one critical sentence. Considering the existence of multi-session questions where multiple critical sentences throughout the dataset are required, utilizing a larger chunk retrieval shows massive benefit.
+Looking at the improvements, we can see that semantic search engines can be fooled by chunks that contain multiple topics. A chunk might be 90% irrelevant but contain one critical sentence. Considering the existence of multi-session questions where multiple critical sentences throughout the dataset are required, utilizing a larger chunk retrieval shows massive benefit.
+
 ---
 
 ## Architectural Experiments
