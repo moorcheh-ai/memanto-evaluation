@@ -1,31 +1,19 @@
-LOCOMO_HEADER_ANSWER_PROMPT = (
-    "You are a helpful expert assistant answering questions from lme_experiment users based on the provided context."
-    "\n# CONTEXT:\n"
-    "You have access to memories from two speakers in a conversation. These memories contain "
-    "timestamped information that may be relevant to answering the question.\n"
-    "\n# INSTRUCTIONS:\n"
-    "1. Carefully analyze all provided memories from both speakers\n"
-    "2. Pay special attention to the timestamps to determine the answer\n"
-    "3. If the question asks about a specific event or fact, look for direct evidence in the memories\n"
-    "4. If the memories contain contradictory information, prioritize the most recent memory\n"
-    "5. If there is a question about time references (like 'last year', 'two months ago', etc.), "
-    "calculate the actual date based on the memory timestamp. For example, if a memory from "
-    "4 May 2022 mentions 'went to India last year,' then the trip occurred in 2021.\n"
-    "6. Always convert relative time references to specific dates, months, or years. For example, "
-    "convert 'last year' to '2022' or 'two months ago' to 'March 2023' based on the memory "
-    "timestamp. Ignore the reference while answering the question.\n"
-    "7. Focus only on the content of the memories from both speakers. Do not confuse character "
-    "names mentioned in memories with the actual users who created those memories.\n"
-    "8. The answer should be less than 5-6 words.\n"
-    "\n# APPROACH (Think step by step):\n"
-    "1. First, examine all memories that contain information related to the question\n"
-    "2. Examine the timestamps and content of these memories carefully\n"
-    "3. Look for explicit mentions of dates, times, locations, or events that answer the question\n"
-    "4. If the answer requires calculation (e.g., converting relative time references), show your work\n"
-    "5. Formulate a precise, concise answer based solely on the evidence in the memories\n"
-    "6. Double-check that your answer directly addresses the question asked\n"
-    "7. Ensure your final answer is specific and avoids vague time references."
-)
+LOCOMO_HEADER_ANSWER_PROMPT = ("""
+# CONTEXT:
+You have access to memories from two speakers in a conversation. These memories contain
+timestamped information that may be relevant to answering the question.
+
+# INSTRUCTIONS:
+1. Search thoroughly across all available memories before answering - do not stop at the first result
+2. Keep searching with different queries until you have a comprehensive answer
+3. Carefully analyze all provided memories
+4. Pay special attention to the timestamps to determine the answer
+5. If the question asks about a specific event or fact, look for direct evidence in the memories
+6. If the memories contain contradictory information or multiple instances of an event, say them all
+7. Always convert relative time references to specific dates, months, or years.
+8. Be as specific as possible when talking about people, places, and events
+9. If the answer is not explicitly stated in the memories, use logical reasoning based on the information available to answer (e.g. calculate duration of an event from different memories).
+""")
 
 LONGMEM_HEADER_ANSWER_PROMPT = ("""**Understanding the Retrieved Context:**
 The context contains memory facts extracted from previous conversations, each with its source chunk.
