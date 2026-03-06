@@ -13,9 +13,9 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 | Method | Single-session User | Single-session Assistant | Single-session Preference | Knowledge Update | Temporal Reasoning | Multi-session | Overall |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Hindsight (Gemini-3) | 97.1% | 96.4% | 80.0% | 94.9% | 91.0% | 87.2% | 91.4% |
+| **Mumla (Gemini-3)** | **95.7%** | **100.0%** | **93.3%** | **93.6%** | **88.0%** | **81.2%** | **89.8%** |
 | Hindsight (OSS-120B) | 100.0% | 98.2% | 86.7% | 92.3% | 85.7% | 81.2% | 89.0% |
 | Supermemory (Gemini-3) | 98.6% | 98.2% | 70.0% | 89.7% | 82.0% | 76.7% | 85.2% |
-| **Mumla (Sonnet-4)** | **94.3%** | **100.0%** | **93.3%** | **94.9%** | **79.7%** | **71.4%** | **85.0%** |
 | Supermemory (GPT-5) | 97.1% | 100.0% | 76.7% | 87.2% | 81.2% | 75.2% | 84.6% |
 | Hindsight (OSS-20B) | 95.7% | 94.6% | 66.7% | 84.6% | 79.7% | 79.7% | 83.6% |
 | Supermemory (GPT-4o) | 97.1% | 96.4% | 70.0% | 88.5% | 76.7% | 71.4% | 81.6% |
@@ -29,7 +29,7 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Backboard | 89.36% | 75.00% | 91.20% | 91.90% | 90.00% |
 | Hindsight (Gemini-3) | 86.17% | 70.83% | 95.12% | 83.80% | 89.61% |
-| **Mumla (Sonnet-4)** | **76.95%** | **71.88%** | **92.27%** | **83.18%** | **86.3%** |
+| **Mumla (Gemini-3)** | **78.72%** | **70.83%** | **92.39%** | **85.36%** | **87.08%** |
 | Hindsight (OSS-120B) | 76.79% | 62.50% | 93.68% | 79.44% | 85.67% |
 | Hindsight (OSS-20B) | 74.11% | 64.58% | 90.96% | 76.32% | 83.18% |
 | Memobase (v0.0.37) | 70.92% | 46.88% | 77.17% | 85.05% | 75.78% |
