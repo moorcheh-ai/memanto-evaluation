@@ -1,6 +1,7 @@
 import requests
 import os
 import logging
+from google import genai
 from .prompts import LOCOMO_HEADER_ANSWER_PROMPT, LONGMEM_HEADER_ANSWER_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -68,12 +69,15 @@ class MemoryClient:
 		resp.raise_for_status()
 		return resp.json()
 
-	def search_memory(self, agent_id: str, query: str, limit: int, tags: list = None):
-		params = {"query": query, "limit": limit}
+	def search_memory(self, agent_id: str, query: str, limit: int, threshold: int, tags: list = None):
+		params = {"query": query, "limit": limit, "min_similarity": threshold}
+		if tags:
+			params["tags"] = ",".join(tags)
 		resp = requests.get(f"{self.endpoint_url}/api/v2/agents/{agent_id}/recall", params=params, headers=self._headers())
 		resp.raise_for_status()
 		return resp.json().get("memories", [])
 
+	# Use claude sonnet for answering questions with retrieved context
 	def answer(self, dataset_name, agent_id: str, question: str, threshold: float, limit: int):
 		params = {
 			"kiosk_mode": True,
@@ -94,8 +98,32 @@ class MemoryClient:
 		resp.raise_for_status()
 		data = resp.json()
 		return data.get("answer", "")
-		
 	
+	# Use external Gemini API for answering questions with retrieved context
+	def answer_rag(self, dataset_name, agent_id: str, question: str, threshold: float, limit: int):
+		"""
+		Perform client-side RAG using Gemini API
+		"""
+		client = genai.Client()
+		memories = self.search_memory(agent_id, query=question, limit=limit, threshold=threshold)
+		if not memories:
+			context_str = "No relevant context found."
+		else:
+			context_str = "\n".join([f"- {m.get('content')}" for m in memories])
+		prompt_header = LONGMEM_HEADER_ANSWER_PROMPT if dataset_name.lower() == "longmem" else LOCOMO_HEADER_ANSWER_PROMPT
+		full_prompt = f"{prompt_header}\n\n# CONTEXT:\n{context_str}\n\n# QUESTION:\n{question}\n\n# ANSWER:"
+		
+		print()
+		try:
+			response = client.models.generate_content(
+				model="gemini-3-pro-preview",
+				contents=full_prompt
+			)
+			return response.text
+		except Exception as e:
+			logger.error(f"Gemini API Error: {e}")
+			return f"Error calling Gemini: {e}"
+
 	def ask_ai(self, question: str):
 		data = {"query": question, "namespace": ""}
 		headers = self._headers().copy()
