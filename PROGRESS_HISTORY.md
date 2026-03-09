@@ -6,7 +6,7 @@ This document outlines the benchmarking progression for the MUMLA project using 
 ---
 
 ## Establishing the Baseline
-Our starting point was a standard "Naive RAG" implementation designed to establish a performance floor.
+We started with a standard "Naive RAG" implementation to establish a performance floor.
 - **Methodology**: Simple semantic search against ingested memory chunks.
 - **Parameters**: 
   - **Retrieval Limit**: Top 10 chunks.
@@ -19,12 +19,12 @@ Our starting point was a standard "Naive RAG" implementation designed to establi
 #### LoCoMo
 **Overall Accuracy**: 76.2%
 
-At its absolute baseline it performs fairly well on the LoCoMo dataset, already surpassing some agentic AI systems but doing much more poorly on the LongMemEval dataset.
+Even at this barebones baseline, we were already seeing results comparable to full-context baselines (LoCoMo 72.9%, LongMemEval 60.2%). It performed fairly well on the LoCoMo dataset, already surpassing some agentic AI systems, though it struggled more with the complex reasoning required by LongMemEval.
 
 ---
 
 ## Retrieval & Parameter Optimization
-We observed that a chunk retrieval limit of 10 chunks was a major bottleneck. There are many complex user queries which reference several events scattered across various sessions which would be nearly impossible for semantic search to find all of them.
+We quickly realized that a retrieval limit of 10 chunks was a major bottleneck. Many complex user queries reference several events scattered across various sessions, making it nearly impossible for a semantic search to find all relevant pieces of information within such a tight constraint.
 
 ### Updates
 - Increased retrieval limit from **10** to **40** chunks.
@@ -36,18 +36,18 @@ We observed that a chunk retrieval limit of 10 chunks was a major bottleneck. Th
 #### LoCoMo
 **Overall Accuracy**: 82.8%
 
-As we can see, with a sufficiently strong LLM, it's better to retrieve "noisy" chunks and let the LLM filter them than to miss relevant chunks entirely, so we see significant accuracy increases across the board.
+We immediately see significant accuracy increases across the board. The takeaway? With a sufficiently capable LLM, it's better to retrieve "noisy" chunks and let the model filter them than to miss relevant chunks entirely.
 
 ---
 
 ## Prompt Engineering
-The next thing to focus on is the prompts specified for both the LLM judge and LLM answerer.
+Next, we turned our attention to the prompts used for both the LLM judge and the LLM answerer.
 
-A significant amount of attention has to be dedicated to this due to the nature of using an LLM as a judge. It introduces the possibility of semantically correct answers which can be rejected if they don't match the ground truth's phrasing.
+When using an LLM as a judge, significant care must be taken. A poorly tuned judge might reject semantically correct answers simply because they don't exactly match the ground truth's phrasing.
 
-This applies to the LLM answerer too as there are scenarios where even if it knows the right answer, due to lack of context or potential ambiguities in the question, the LLM may not present it with much confidence or outright say it doesn't know causing the answer to be rejected.
+Similarly, an LLM answerer might know the right answer but, due to perceived ambiguities or a lack of explicit context, fail to present it confidently or outright refuse to answer.
 
-We adopted prompts from the [*Hindsight*](https://github.com/vectorize-io/hindsight) repository to establish a more equal benchmark with other agentic systems and modified it to account for our specific memory architecture.
+To establish a fairer benchmark against other agentic systems, we adopted prompts from the [*Hindsight*](https://github.com/vectorize-io/hindsight) repository, modifying them to account for our specific memory architecture.
 
 #### LongMemEval
 **Overall Accuracy**: 79.2%
@@ -55,12 +55,14 @@ We adopted prompts from the [*Hindsight*](https://github.com/vectorize-io/hindsi
 #### LoCoMo
 **Overall Accuracy**: 82.9%
 
-We can see an accuracy increase in the LongMem dataset but not the LoCoMo one likely due to the difference in question schema. The LoCoMo dataset uses much more straightforward questioning which is easy to parse while the LongMem dataset asks questions which may require more complex reasoning and small ambiguities in the answering schema.
+We observed an accuracy increase in the LongMemEval dataset, but not LoCoMo. This is likely due to the difference in question schemas: LoCoMo features straightforward, easy-to-parse questions, while LongMemEval involves queries that require complex reasoning and nuanced answering schemas.
+
+The accuracy increase isn't significant so in the near future with stronger LLM's or a more robust memory architecture, the attention put into prompting can be reduced, allowing MUMLA to perform the complex reasoning tasks without prompting guidance.
 
 ---
 
-## 5. Continued Retrieval & Parameter Optimization
-Observing the individual questions and how the LLM fails to answer them, we notice that incorrect answers aren't usually a result of noisy chunks being provided, but rather the semantic search didn't manage to search all of the correct chunks making it impossible for the LLM to deduce the answer.
+## Pushing Retrieval Further
+Analyzing the individual failures revealed that incorrect answers weren't usually caused by noisy chunks confusing the LLM. Instead, the semantic search was still missing critical chunks needed to deduce the answer.
 
 ### Updates
 - Increased retrieval limit from **40** to **100** chunks.
@@ -72,25 +74,25 @@ Observing the individual questions and how the LLM fails to answer them, we noti
 #### LoCoMo
 **Overall Accuracy**: 86.3%
 
-Looking at the improvements, we can see that semantic search engines can be fooled by chunks that contain multiple topics. A chunk might be 90% irrelevant but contain one critical sentence. Considering the existence of multi-session questions where multiple critical sentences throughout the dataset are required, utilizing a larger chunk retrieval shows massive benefit.
+Again we continue to see major improvements across the board by increasing retrieval size. Semantic search engines can sometimes be fooled by chunks containing multiple topics, a chunk might be 90% irrelevant but contain one critical sentence. Because multi-session questions require synthesizing critical sentences scattered throughout the dataset, utilizing a much larger chunk retrieval pool proved massively beneficial.
 
 ---
 
 ## Architectural Experiments
-We briefly explored structural changes to the memory system itself to improve performance without significantly altering the overall RAG architecture of Moorcheh. The issue of critical sentences in otherwise irrelevant chunks is still very prevalent and retrieving more chunks only serves to mitigate the problem.
+We briefly explored structural changes to the memory system itself to improve performance without significantly altering MUMLA's core RAG architecture. Despite the improvements, retrieving more chunks only serves to mitigate the "critical sentence in an irrelevant chunk" problem; it doesn't solve it.
 
-We tried the following:
+We experimented with:
 - **Session Summaries**: Summarizing an entire conversation session into a single block.
 - **Global Summaries**: Aggregating insights across all sessions.
 
-The hope is that while the chunk relevancy may gloss over these critical sentences a wholistic session summary or global summary may see these as more important to mention.
+The hope was that while chunk-level retrieval might skim over critical sentences, holistic session or global summaries would highlight them.
 
-While these provided marginal improvements, they introduced a significant increase in token consumption and cost. We decided that the marginal improvements were not worth it and that utilizing a graph-based memory architecture may be the route to further memory retrieval accuracy.
+These approaches did provide some marginal improvements, however it started to introduce a significant increase in token consumption and cost. We concluded that the trade-off wasn't worth it, and that pivoting to a graph-based memory architecture might be the more viable route for future retrieval accuracy gains.
 
 ---
 
-## Gemini 3 Transition
-For the final comprehensive evaluation, we switched the underlying inference model from **Claude Sonnet 4** to **Gemini 3**. Along with the issue of finding a needle in a haystack, there were also many questions where the model was simply not smart enough to interpret all of the information correctly and come up with the correct answer. This is also necessary to establish an equal comparison between other agentic systems who use gemini 3 for their evaluation testing.
+## Transitioning to Gemini 3
+For our final comprehensive evaluation, we switched the underlying inference model from **Claude Sonnet 4** to **Gemini 3**. Beyond the "needle in a haystack" retrieval problem, there were instances where the previous model struggled to correctly interpret the provided information. This transition was also necessary to establish an apples-to-apples comparison with other agentic systems that use Gemini 3 for their evaluation testing.
 
 #### LongMemEval
 | Single-session User | Single-session Assistant | Single-session Preference | Knowledge Update | Temporal Reasoning | Multi-session | Overall |
@@ -105,4 +107,6 @@ For the final comprehensive evaluation, we switched the underlying inference mod
 ---
 
 ## Conclusion
-With using just a RAG-based schema as a memory layer retrieving the first 100 relevant chunks, we already see major proficiency with memory tasks that were previously thought to require complex graph databases or parallel search retrieval. Achieving **89.8%** on LongMemEval and **87.1%** on LoCoMo is a testament to the power of Moorchehs high quality semantic search and retrieval.
+Using a standard RAG-based schema as a memory layer and retrieving the top 100 relevant chunks, we've demonstrated major proficiency in memory tasks previously thought to require complex graph databases or parallel search retrieval architectures.
+
+Achieving **89.8%** on LongMemEval and **87.1%** on LoCoMo is a testament to the power of Moorcheh's high-quality semantic search and retrieval. Simple, highly-optimized RAG is far more capable than it gets credit for.
