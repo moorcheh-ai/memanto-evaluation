@@ -42,7 +42,9 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 
 ### Running Benchmarks
 
-Ensure the `MOORCHEH_API_KEY` environment variable is set before starting.
+Ensure you have the following environment variables set before starting:
+- `MOORCHEH_API_KEY`
+- `GEMINI_API_KEY` (required for running the LLM evaluator)
 
 To run a benchmark, execute the ingestion script followed by the evaluator. Replace `<benchmark>` with either `locomo` or `longmem`:
 
@@ -54,6 +56,11 @@ To run a benchmark, execute the ingestion script followed by the evaluator. Repl
 2.  **Run Evaluation** (generates results):
     ```bash
     python <benchmark>/evaluator.py
+    ```
+
+3.  **Generate Report** (compiles the final evaluation report):
+    ```bash
+    python <benchmark>/generate_report.py
     ```
 
 (Note: Running the LongMem benchmark requires a **Moorcheh Pro** subscription)
