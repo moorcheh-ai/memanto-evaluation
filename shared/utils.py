@@ -1,5 +1,6 @@
 import json
 from .prompts import get_judge_prompt_long_mem, get_judge_prompt_locomo
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 class LLM_Judge:
     def __init__(self, ask_ai_func, dataset_name):
@@ -11,33 +12,30 @@ class LLM_Judge:
         self.ask_ai = ask_ai_func
         self.dataset_name = dataset_name
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     def evaluate(self, question, prediction, ground_truth, category):
-        try:
-            # Generate the appropriate prompt based on the dataset
-            if self.dataset_name.lower() == "locomo":
-                prompt = get_judge_prompt_locomo(question, ground_truth, prediction)
-            else:
-                prompt = get_judge_prompt_long_mem(question, ground_truth, prediction, category)
-            # Call your implemented ask_ai function
-            response_str = self.ask_ai(prompt)
+        # Generate the appropriate prompt based on the dataset
+        if self.dataset_name.lower() == "locomo":
+            prompt = get_judge_prompt_locomo(question, ground_truth, prediction)
+        else:
+            prompt = get_judge_prompt_long_mem(question, ground_truth, prediction, category)
+        # Call your implemented ask_ai function
+        response_str = self.ask_ai(prompt)
 
-            # Clean potential markdown formatting
-            cleaned_response = response_str.strip()
+        # Clean potential markdown formatting
+        cleaned_response = response_str.strip()
+        
+        # Find the JSON object in the string if it's mixed with text
+        try:
+            start_idx = cleaned_response.find('{')
+            end_idx = cleaned_response.rfind('}')
+            if start_idx != -1 and end_idx != -1:
+                cleaned_response = cleaned_response[start_idx:end_idx+1]
+        except Exception:
+            pass  # Fallback to original string if extraction fails
             
-            # Find the JSON object in the string if it's mixed with text
-            try:
-                start_idx = cleaned_response.find('{')
-                end_idx = cleaned_response.rfind('}')
-                if start_idx != -1 and end_idx != -1:
-                    cleaned_response = cleaned_response[start_idx:end_idx+1]
-            except Exception:
-                pass  # Fallback to original string if extraction fails
-                
-            response = json.loads(cleaned_response)
-            score = response.get('score', None)
-            reasoning = response.get('reasoning', '')
-            return {"score": score, "reasoning": reasoning}
-        except Exception as e:
-            print(f"Error during LLM Judging: {e}")
-            # Fallback in case the AI fails or returns invalid JSON
-            return {"score": 0, "reasoning": f"Error parsing judge response: {str(e)}"}
+        response = json.loads(cleaned_response)
+        score = response.get('score', None)
+        reasoning = response.get('reasoning', '')
+        return {"score": score, "reasoning": reasoning}
+    

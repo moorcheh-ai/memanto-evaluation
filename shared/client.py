@@ -3,6 +3,7 @@ import os
 import logging
 from google import genai
 from .prompts import LOCOMO_HEADER_ANSWER_PROMPT, LONGMEM_HEADER_ANSWER_PROMPT
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ class MemoryClient:
 		return resp.json().get("memories", [])
 
 	# Use claude sonnet for answering questions with retrieved context
+	@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 	def answer(self, dataset_name, agent_id: str, question: str, threshold: float, limit: int):
 		params = {
 			"kiosk_mode": True,
@@ -100,6 +102,7 @@ class MemoryClient:
 		return data.get("answer", "")
 	
 	# Use external Gemini API for answering questions with retrieved context
+	@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 	def answer_rag(self, dataset_name, agent_id: str, question: str, threshold: float, limit: int):
 		"""
 		Perform client-side RAG using Gemini API
