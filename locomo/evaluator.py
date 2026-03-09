@@ -81,6 +81,7 @@ class LoCoMoEvaluator:
                         "prediction": predicted_answer,
                         "ground_truth": ground_truth,
                         "score": score_data.get("score", 0),
+                        "reasoning": score_data.get("reasoning", ""),
                     }
                 except Exception as e:
                     self.logger.error(f"Error processing QA for sample {sample_id}: {e}")
