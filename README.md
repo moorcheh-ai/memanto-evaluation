@@ -12,6 +12,7 @@ Official benchmark scores are tracked in `results/baselines/`. The results provi
 
 | Method | Single-session User | Single-session Assistant | Single-session Preference | Knowledge Update | Temporal Reasoning | Multi-session | Overall |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Backboard (GPT-4o) | 97.1% | 98.2% | 90.0% | 93.6% | 91.7% | 91.7% | 93.4% |
 | Hindsight (Gemini-3) | 97.1% | 96.4% | 80.0% | 94.9% | 91.0% | 87.2% | 91.4% |
 | **Mumla (Gemini-3)** | **95.7%** | **100.0%** | **93.3%** | **93.6%** | **88.0%** | **81.2%** | **89.8%** |
 | Hindsight (OSS-120B) | 100.0% | 98.2% | 86.7% | 92.3% | 85.7% | 81.2% | 89.0% |
