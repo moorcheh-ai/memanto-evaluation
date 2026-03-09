@@ -1,0 +1,95 @@
+{
+    "report_type": "Locomo Evaluation",
+    "generated_at": "2026-03-09 15:04:21",
+    "source_file": "locomo_results_20260306_1138.json",
+    "total_samples": 1540,
+    "overall_accuracy": 0.8708,
+    "accuracy_by_category": {
+        "Single-Hop": {
+            "accuracy": 0.7872,
+            "count": 282,
+            "correct": 222,
+            "wrong": 60
+        },
+        "Temporal": {
+            "accuracy": 0.8536,
+            "count": 321,
+            "correct": 274,
+            "wrong": 47
+        },
+        "Multi-Hop": {
+            "accuracy": 0.7083,
+            "count": 96,
+            "correct": 68,
+            "wrong": 28
+        },
+        "Open Domain": {
+            "accuracy": 0.9239,
+            "count": 841,
+            "correct": 777,
+            "wrong": 64
+        }
+    },
+    "accuracy_by_sample": {
+        "conv-26": {
+            "accuracy": 0.9408,
+            "count": 152,
+            "correct": 143,
+            "wrong": 9
+        },
+        "conv-30": {
+            "accuracy": 0.9136,
+            "count": 81,
+            "correct": 74,
+            "wrong": 7
+        },
+        "conv-49": {
+            "accuracy": 0.9103,
+            "count": 156,
+            "correct": 142,
+            "wrong": 14
+        },
+        "conv-50": {
+            "accuracy": 0.9051,
+            "count": 158,
+            "correct": 143,
+            "wrong": 15
+        },
+        "conv-41": {
+            "accuracy": 0.875,
+            "count": 152,
+            "correct": 133,
+            "wrong": 19
+        },
+        "conv-48": {
+            "accuracy": 0.8743,
+            "count": 191,
+            "correct": 167,
+            "wrong": 24
+        },
+        "conv-47": {
+            "accuracy": 0.8733,
+            "count": 150,
+            "correct": 131,
+            "wrong": 19
+        },
+        "conv-42": {
+            "accuracy": 0.8643,
+            "count": 199,
+            "correct": 172,
+            "wrong": 27
+        },
+        "conv-43": {
+            "accuracy": 0.8034,
+            "count": 178,
+            "correct": 143,
+            "wrong": 35
+        },
+        "conv-44": {
+            "accuracy": 0.7561,
+            "count": 123,
+            "correct": 93,
+            "wrong": 30
+        }
+    }
+}

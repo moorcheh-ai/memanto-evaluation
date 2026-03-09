@@ -1,0 +1,49 @@
+{
+    "report_type": "LongMem Evaluation",
+    "generated_at": "2026-03-09 15:02:39",
+    "source_file": "longmem_results_20260306_133706.json",
+    "total_samples": 500,
+    "overall_accuracy": 0.898,
+    "score_distribution": {
+        "0": 51,
+        "1": 449
+    },
+    "accuracy_by_question_type": {
+        "single-session-assistant": {
+            "accuracy": 1.0,
+            "count": 56,
+            "correct": 56,
+            "wrong": 0
+        },
+        "single-session-user": {
+            "accuracy": 0.9571,
+            "count": 70,
+            "correct": 67,
+            "wrong": 3
+        },
+        "knowledge-update": {
+            "accuracy": 0.9359,
+            "count": 78,
+            "correct": 73,
+            "wrong": 5
+        },
+        "single-session-preference": {
+            "accuracy": 0.9333,
+            "count": 30,
+            "correct": 28,
+            "wrong": 2
+        },
+        "temporal-reasoning": {
+            "accuracy": 0.8797,
+            "count": 133,
+            "correct": 117,
+            "wrong": 16
+        },
+        "multi-session": {
+            "accuracy": 0.812,
+            "count": 133,
+            "correct": 108,
+            "wrong": 25
+        }
+    }
+}
