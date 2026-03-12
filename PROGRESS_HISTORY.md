@@ -77,7 +77,7 @@ The continued, massive improvements validate a critical shift in how we should b
 ## The Cost of Overengineering: Summaries vs. Scale
 We did briefly experiment with structural memory changes—specifically, generating **Session Summaries** and **Global Summaries** to highlight critical sentences that raw chunk retrieval might miss. 
 
-While these architectural additions provided additional accuracy improvements, they introduced a severe, compounding tax on token consumption and operational cost. We concluded that the trade-off wasn't worth it. For teams looking to squeeze out the final few percentage points of accuracy, pivoting to a graph-based memory architecture (Knowledge Graphs) might be the logical next step, but it is not a prerequisite for high performance.
+While these architectural additions provided additional accuracy improvements, they introduced a severe, compounding tax on token consumption and operational cost. We concluded that the trade-off wasn't worth it. For teams looking to squeeze out the final few percentage points of accuracy, adopting a more complex memory architecture might seem like the logical next step, but it is not a prerequisite for high performance.
 
 ---
 
@@ -98,22 +98,31 @@ For our final evaluation pass, we switched the underlying inference model from C
 
 ![Agentic Memory Benchmark Comparison](assets/agentic_memory_comparison.png)
 
-| System | LoCoMo Score | LongMemEval Score | Uses Graph Database | Uses Parallel Retrieval |
-| :--- | :---: | :---: | :---: | :---: |
-| Hindsight | 89.61% | 91.4% | ✅ | ✅ |
-| MUMLA | **87.1%** | **89.8%** | ❌ | ❌ |
-| Supermemory | N/A | 85.2% | ✅ | ✅ |
-| Zep | 75.14% | 71.2% | ✅ | ✅ |
-| Full context | 72.90% | 60.2% | ❌ | ❌ |
-| Mem0 G | 68.44% | N/A | ✅ | ✅ |
-| Mem0 | 66.88% | N/A | ❌ | ✅ |
-| LangMem | 58.10% | N/A | ❌ | ✅ |
-| OpenAI | 52.90% | N/A | ❌ | ❌ |
-| A-MEM | 48.38% | N/A | ❌ | ❌ |
+| System | LoCoMo Score | LongMemEval Score | Memory Architecture | Retrieval Strategy | Querying Method |
+| :--- | :---: | :---: | :--- | :--- | :--- |
+| Hindsight | 89.61% | 91.4% | Hybrid (Graph + Vector) | Parallel | Recursive Querying |
+| **MUMLA** | **87.1%** | **89.8%** | **Vector Only** | **RAG** | **Single Query** |
+| EmergenceMem | — | 86.0% | Hybrid (Graph + Vector) | Parallel | Multi-Query |
+| Supermemory | — | 85.2% | Hybrid (Graph + Vector) | Parallel | Multi-Query |
+| Memobase | 75.8% | — | Hybrid (Graph + Vector) | Parallel | Single Query |
+| Zep | 75.1% | 71.2% | Hybrid (Graph + Vector) | Parallel | Single Query |
+| Letta | 74.0% | — | Local Filesystem | RAG | Recursive Querying |
+| Full context | 72.9% | 60.2% | Vector Only | RAG | Single Query |
+| Mem0 G | 68.4% | — | Hybrid (Graph + Vector) | Parallel | Single Query |
+| Mem0 | 66.9% | — | Vector Only | Parallel | Single Query |
+| LangMem | 58.1% | — | Vector Only | RAG | Single Query |
+
+## The Overhead and Latency Trade-off
+
+As the comparison table illustrates, achieving top scores in agentic memory benchmarks typically requires extensive architectural complexity. Most top-performing systems rely on hybrid setups combining Knowledge Graphs with Vector Databases, alongside heavy retrieval strategies like parallel search pipelines, multi-query generation, and recursive querying (where the LLM actively loops to retrieve missing context).
+
+While these methods may yield high benchmarks, they force a severe trade-off in operational overhead. Maintaining synchronous knowledge graphs creates massive ingestion latency that scales poorly. Multi-query and recursive generation strategies artificially multiply the number of LLM inference calls required per user interaction, leading to skyrocketing token costs and significantly increased response times in production environments.
+
+In stark contrast, MUMLA achieves state-of-the-art accuracy, **89.8% on LongMemEval and 87.1% on LoCoMo** using only a standard RAG pipeline, a pure vector architecture, and a single, unified query. This demonstrates that heavily optimized semantic retrieval can match and often beat complex orchestration, without the compounding latency and token tax.
 
 ---
 
 ## The Future of Agentic AI Memory
-The next phase of agentic AI will not be won by the most complicated memory diagram. It will be won by architectures that balance retrieval quality, reasoning performance, and inference cost at production scale. Our results suggest that strong semantic infrastructure can already deliver state-of-the-art memory performance without forcing heavy graph orchestration.
+The next phase of agentic AI will not be won by the most complicated memory diagram. It will be won by architectures that balance retrieval quality and reasoning performance with low inference costs and minimal latency at production scale. Our results suggest that strong, highly-optimized semantic infrastructure can already deliver state-of-the-art memory performance without forcing heavy graph orchestration or expensive recursive LLM loops.
 
-Going forward, the path is simple: keep the memory system simple, make retrieval accurate, and track results with clear benchmarks. Hitting **89.8%** on LongMemEval and **87.1%** on LoCoMo with MUMLA shows that better agent memory comes from better retrieval, not more complex architecture.
+Going forward, the path is simple: keep the memory system lean, make retrieval exceptionally accurate, and track results with clear benchmarks. While complex architectures can work, they come at a premium in both compute and latency. Hitting **89.8%** on LongMemEval and **87.1%** on LoCoMo with MUMLA proves that highly optimized retrieval can achieve state-of-the-art accuracy without forcing developers to pay that complexity tax.
