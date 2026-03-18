@@ -102,7 +102,7 @@ For our final evaluation pass, we switched the underlying inference model from C
 
 | System | LoCoMo Score | LongMemEval Score | Memory Architecture | Retrieval Strategy | Querying Method |
 | :--- | :---: | :---: | :--- | :--- | :--- |
-| Backboard | 90.0% | 93.4% | Hybrid (Temporal + Vector) | Full Context | Query Reinjection |
+| Backboard | 90.0% | 93.4% | Hybrid (Temporal + Vector) | Parallel | Query Reinjection |
 | Hindsight | 89.61% | 91.4% | Hybrid (Graph + Vector) | Parallel | Query Reinjection |
 | **MUMLA** | **87.1%** | **89.8%** | **Vector Only** | **RAG** | **Single Query** |
 | EmergenceMem | — | 86.0% | Hybrid (Graph + Vector) | Parallel | Multi-Query |
