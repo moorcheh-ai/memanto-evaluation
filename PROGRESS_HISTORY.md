@@ -5,7 +5,7 @@
 ## The Rush for Persistent Memory
 As LLM-powered applications have quickly evolved from single-prompt chatbots into robust, autonomous agents handling complex, multi-session workflows. As such, developers have faced an increasing need for persistent, highly accurate memory. Agentic AI in its current state is locked in an arms race to develop the ultimate long-term memory system.
 
-In just the last year alone, we've seen a wave of dedicated memory tools surface, such as Mem0, Zep, Supermemory, Hindsight, and Backboard. This demand has driven the industry toward increasingly complex solutions, from intricate knowledge graphs to multi-layered parallel retrieval pipelines. Amidst this rush to build the most sophisticated architectures, we wanted to take a step back and see just how far we could push using a standard RAG implementation.
+In just the last year alone, we've seen a wave of dedicated memory tools surface, such as Mem0, Zep, and Supermemory. This demand has driven the industry toward increasingly complex solutions, from intricate knowledge graphs to multi-layered parallel retrieval pipelines. Amidst this rush to build the most sophisticated architectures, we wanted to take a step back and see just how far we could push using a standard RAG implementation.
 
 ## The Problem With Long-Term Memory
 If you feed a modern LLM a short, contained conversation history, it can easily follow complex instructions and synthesize disjointed facts into a coherent answer. The underlying reasoning capabilities of foundational models are excellent. The problem arises when conversations span thousands of messages across dozens of distinct, historical sessions.
@@ -102,8 +102,6 @@ For our final evaluation pass, we switched the underlying inference model from C
 
 | System | LoCoMo Score | LongMemEval Score | Memory Architecture | Retrieval Strategy | Querying Method |
 | :--- | :---: | :---: | :--- | :--- | :--- |
-| Backboard | 90.0% | 93.4% | Hybrid (Temporal + Vector) | Parallel | Query Reinjection |
-| Hindsight | 89.61% | 91.4% | Hybrid (Graph + Vector) | Parallel | Query Reinjection |
 | **MUMLA** | **87.1%** | **89.8%** | **Vector Only** | **RAG** | **Single Query** |
 | EmergenceMem | — | 86.0% | Hybrid (Graph + Vector) | Parallel | Multi-Query |
 | Supermemory | — | 85.2% | Hybrid (Graph + Vector) | Parallel | Multi-Query |
