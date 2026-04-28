@@ -8,6 +8,7 @@ applications:
             - npm ci --cache .npm --prefer-offline
         build:
           commands:
+            - env | grep -e MOORCHEH_ >> .env.production
             - npm run build
       artifacts:
         baseDirectory: .next
@@ -16,5 +17,4 @@ applications:
       cache:
         paths:
           - .npm/**/*
-          - node_modules/**/*
           - .next/cache/**/*
