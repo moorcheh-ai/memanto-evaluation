@@ -2,6 +2,36 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const ipStore = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(request: Request) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+function checkRateLimit(ip: string) {
+  const now = Date.now();
+  const entry = ipStore.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    ipStore.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { allowed: true };
+  }
+
+  if (entry.count >= RATE_LIMIT) {
+    const retryAfterSec = Math.ceil((entry.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSec };
+  }
+
+  entry.count += 1;
+  return { allowed: true };
+}
+
 type Provider = "Moorcheh" | "Anthropic" | "Gemini" | "Nvidia" | "OpenAI" | "Custom";
 
 type ModelConfig = {
@@ -50,6 +80,20 @@ function getProviderDefaultKey(provider: string | undefined, genericKey?: string
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rateCheck = checkRateLimit(ip);
+
+  if (!rateCheck.allowed) {
+    const retrySec = rateCheck.retryAfterSec ?? 60;
+    const minutes = Math.ceil(retrySec / 60);
+    return NextResponse.json(
+      {
+        error: `Rate limit reached. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`,
+      },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = (await req.json()) as EvaluateRequestBody;
     const { inference, judge, prompt, agentId, groundTruth, dataset } = body;
