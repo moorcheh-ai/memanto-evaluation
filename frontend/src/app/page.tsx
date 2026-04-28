@@ -340,6 +340,7 @@ export default function Home() {
                         value={selectedLocomoSampleId} 
                         onChange={(e) => {
                           const nextSampleId = e.target.value;
+                          setSearchQuery(""); // Clear search when manually changing user
                           setSelectedLocomoSampleId(nextSampleId);
                           setSelectedLocomoQuestionIdx("0");
                           setPrompt(getLocomoQuestion(nextSampleId, "0"));
@@ -355,6 +356,12 @@ export default function Home() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-950 dark:text-zinc-50">Question</label>
+                      <Input
+                        placeholder="Search questions..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="text-sm h-9 mb-2"
+                      />
                       <Select
                         value={selectedLocomoQuestionIdx}
                         onChange={(e) => {
@@ -363,10 +370,14 @@ export default function Home() {
                           setPrompt(getLocomoQuestion(selectedLocomoSampleId, nextQuestionIdx));
                         }}
                       >
-                        {locomoData.find(d => d.sample_id === selectedLocomoSampleId)?.qa.map((qa, idx) => (
-                          <option key={idx} value={idx.toString()}>
-                            {qa.question.length > 50 ? qa.question.substring(0, 50) + "..." : qa.question}
-                          </option>
+                        {locomoData
+                          .find(d => d.sample_id === selectedLocomoSampleId)?.qa
+                          .map((qa, idx) => ({ qa, idx }))
+                          .filter(({ qa }) => qa.question.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map(({ qa, idx }) => (
+                            <option key={idx} value={idx.toString()}>
+                              {qa.question.length > 50 ? qa.question.substring(0, 50) + "..." : qa.question}
+                            </option>
                         ))}
                       </Select>
                     </div>
@@ -449,7 +460,7 @@ export default function Home() {
                   <label className="text-sm font-medium flex justify-between text-zinc-950 dark:text-zinc-50">API Key</label>
                   <Input 
                     type="password" 
-                    placeholder="Leave blank to use server key" 
+                    placeholder={provider === "Moorcheh" ? "Leave blank to use server key" : "Enter your API key"}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     autoComplete="new-password"
@@ -550,7 +561,7 @@ export default function Home() {
                     <label className="text-sm font-medium flex justify-between text-zinc-950 dark:text-zinc-50">Judge API Key</label>
                     <Input 
                       type="password" 
-                      placeholder="Leave blank to use server key" 
+                      placeholder={judgeProvider === "Moorcheh" ? "Leave blank to use server key" : "Enter your API key"}
                       value={judgeApiKey}
                       onChange={(e) => setJudgeApiKey(e.target.value)}
                       autoComplete="new-password"
